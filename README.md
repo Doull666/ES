@@ -172,8 +172,162 @@ GET hy_enterprise/_search
   }
 }
 ```
-
-
+## 7. ES 分词器
+### 1. 查看分词情况
+```
+POST hy_enterprise/_analyze
+{
+  "analyzer": "standard",
+  "text":"This is 超级"
+}
+```
+### 2. 各分词器详解
+1. Standard Analyzer：默认分词器；区分中英文，英文按照空格切分，同时大写转小写；中文按照单个词分词。
+```
+{
+  "tokens": [
+    {
+      "token": "this",
+      "start_offset": 0,
+      "end_offset": 4,
+      "type": "<ALPHANUM>",
+      "position": 0
+    },
+    {
+      "token": "is",
+      "start_offset": 5,
+      "end_offset": 7,
+      "type": "<ALPHANUM>",
+      "position": 1
+    },
+    {
+      "token": "超",
+      "start_offset": 8,
+      "end_offset": 9,
+      "type": "<IDEOGRAPHIC>",
+      "position": 2
+    },
+    {
+      "token": "级",
+      "start_offset": 9,
+      "end_offset": 10,
+      "type": "<IDEOGRAPHIC>",
+      "position": 3
+    }
+  ]
+}
+```
+2. Simple Analyzer：先按照空格分词，英文大写转小写，不是英文不在分词
+```
+{
+  "tokens": [
+    {
+      "token": "this",
+      "start_offset": 0,
+      "end_offset": 4,
+      "type": "word",
+      "position": 0
+    },
+    {
+      "token": "is",
+      "start_offset": 5,
+      "end_offset": 7,
+      "type": "word",
+      "position": 1
+    },
+    {
+      "token": "超级",
+      "start_offset": 8,
+      "end_offset": 10,
+      "type": "word",
+      "position": 2
+    }
+  ]
+}
+```
+3. Whitespace Analyzer：按空格分词，英文不区分大小写，中文不再分词
+```
+{
+  "tokens": [
+    {
+      "token": "This",
+      "start_offset": 0,
+      "end_offset": 4,
+      "type": "word",
+      "position": 0
+    },
+    {
+      "token": "is",
+      "start_offset": 5,
+      "end_offset": 7,
+      "type": "word",
+      "position": 1
+    },
+    {
+      "token": "超级",
+      "start_offset": 8,
+      "end_offset": 10,
+      "type": "word",
+      "position": 2
+    }
+  ]
+}
+```
+4. ik分词器：使用需要额外下载压缩包，并解压放置 es 的 plugins 目录下
+    1. ik_smart: 会做最粗粒度的拆分，英文直接过滤
+    ```
+   POST hy_enterprise/_analyze
+   {
+     "analyzer": "ik_smart",
+     "text":"This is 世界上"
+   }
+   ---------------------------
+   {
+     "tokens": [
+       {
+         "token": "世界上",
+         "start_offset": 8,
+         "end_offset": 11,
+         "type": "CN_WORD",
+         "position": 0
+       }
+     ]
+   }
+   ```
+   2. ik_max_word: 会将文本做最细粒度的拆分
+   ```
+   POST hy_enterprise/_analyze
+   {
+     "analyzer": "ik_max_word",
+     "text":"This is 世界上"
+   }
+   ---------------------------------
+   {
+     "tokens": [
+       {
+         "token": "世界上",
+         "start_offset": 8,
+         "end_offset": 11,
+         "type": "CN_WORD",
+         "position": 0
+       },
+       {
+         "token": "世界",
+         "start_offset": 8,
+         "end_offset": 10,
+         "type": "CN_WORD",
+         "position": 1
+       },
+       {
+         "token": "上",
+         "start_offset": 10,
+         "end_offset": 11,
+         "type": "CN_CHAR",
+         "position": 2
+       }
+     ]
+   }
+   ```
 
 
 
